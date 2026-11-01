@@ -13,7 +13,10 @@ class RuntimePackageTests(unittest.TestCase):
             shutil.copy2(ROOT / 'Packages/BugCapsulePatch/runtime-provenance.json', package)
             shutil.copytree(ROOT / 'Packages/BugCapsulePatch/Binaries', package / 'Binaries')
             def valid():
-                return subprocess.run(['python3', str(root / 'scripts/verify-patch-runtime.py')], capture_output=True).returncode == 0
+                results = [subprocess.run(['python3', *flags, str(root / 'scripts/verify-patch-runtime.py')], capture_output=True).returncode == 0
+                           for flags in ([], ['-O'])]
+                self.assertEqual(results[0], results[1], 'Optimization must not disable release checks')
+                return results[0]
             self.assertTrue(valid())
             framework = package / 'Binaries/BcpatchRuntime.xcframework'
             binary = next(p for p in framework.rglob('BcpatchRuntime') if p.is_file())
